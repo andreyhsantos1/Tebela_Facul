@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora Estatística — Discreto & Classes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Calculadora Estatística</h1>
+      <p class="muted">Escolha o tipo de agrupamento para iniciar.</p>
+      <div id="screen-home" class="row">
+        <button class="btn btn-primary" onclick="goDiscreto()">Agrupamento Discreto</button>
+        <button class="btn btn-outline" onclick="goClasses()">Agrupamento em Classes</button>
+      </div>
+    </div>
+
+    <!-- ===================== DISCRETO: ESCOLHA DE ENTRADA ===================== -->
+    <div id="screen-discreto-entrada" class="card hidden">
+      <div class="row">
+        <div class="col"><h2>Agrupamento Discreto</h2></div>
+        <div><button class="btn" onclick="goHome()">← Voltar</button></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label for="unidadeDiscreto">Unidade</label>
+          <select id="unidadeDiscreto">
+            <option>R$</option>
+            <option>Km/h</option>
+            <option>m²</option>
+            <option>°C</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Resultado desejado</label>
+          <div class="checks" id="checksDiscreto"></div>
+          <div class="muted">Dica: marque <span class="pill">Selecionar todos</span> para ver tudo.</div>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn btn-primary" onclick="showDiscretoTabela()">Inserção por Tabela</button>
+        <button class="btn btn-outline" onclick="showDiscretoTexto()">Inserção por Texto</button>
+      </div>
+    </div>
+
+    <!-- ===================== DISCRETO: TABELA ===================== -->
+    <div id="screen-discreto-tabela" class="card hidden">
+      <div class="row">
+        <div class="col"><h2>Discreto — Inserção por Tabela</h2></div>
+        <div class="row">
+          <button class="btn" onclick="backToDiscreto()">← Voltar</button>
+          <button class="btn btn-danger" onclick="limparTabelaDiscreto()">Limpar</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="nDiscreto">Número de linhas</label>
+          <input type="number" id="nDiscreto" min="1" max="30" value="5" />
+        </div>
+        <div class="col" style="align-self:end">
+          <button class="btn btn-primary" onclick="gerarTabelaDiscreto()">Gerar Tabela</button>
+        </div>
+      </div>
+
+      <div id="tabelaDiscretoContainer" class="card" style="padding:0"></div>
+
+      <div class="row">
+        <button class="btn btn-primary" onclick="calcularDiscretoFromTabela()">Calcular</button>
+      </div>
+
+      <div id="resultadoDiscretoTabela" class="results"></div>
+    </div>
+
+    <!-- ===================== DISCRETO: TEXTO ===================== -->
+    <div id="screen-discreto-texto" class="card hidden">
+      <div class="row">
+        <div class="col"><h2>Discreto — Inserção por Texto</h2></div>
+        <div class="row">
+          <button class="btn" onclick="backToDiscreto()">← Voltar</button>
+          <button class="btn btn-danger" onclick="limparTextoDiscreto()">Limpar</button>
+        </div>
+      </div>
+
+      <label for="textoDiscreto">Valores (separe com ponto e vírgula: 23; 74; 34; 23). Aceita decimais com ponto ou vírgula.</label>
+      <textarea id="textoDiscreto" placeholder="Ex.: 23; 74; 34; 23" required></textarea>
+
+      <div class="row">
+        <button class="btn btn-primary" onclick="calcularDiscretoFromTexto()">Calcular</button>
+      </div>
+
+      <div id="freqPreview" class="muted"></div>
+      <div id="resultadoDiscretoTexto" class="results"></div>
+    </div>
+
+    <!-- ===================== CLASSES ===================== -->
+    <div id="screen-classes" class="card hidden">
+      <div class="row">
+        <div class="col"><h2>Agrupamento em Classes</h2></div>
+        <div class="row">
+          <button class="btn" onclick="goHome()">← Voltar</button>
+          <button class="btn btn-danger" onclick="limparClasses()">Limpar</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="unidadeClasses">Unidade</label>
+          <select id="unidadeClasses">
+            <option>R$</option>
+            <option>Km/h</option>
+            <option>m²</option>
+            <option>°C</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Resultado desejado</label>
+          <div class="checks" id="checksClasses"></div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row">
+        <div class="col">
+          <label for="nClasses">Número de classes</label>
+          <input type="number" id="nClasses" min="1" max="30" value="5" />
+        </div>
+        <div class="col" style="align-self:end">
+          <button class="btn btn-primary" onclick="gerarTabelaClasses()">Gerar Tabela</button>
+        </div>
+      </div>
+
+      <div id="tabelaClassesContainer" class="card" style="padding:0"></div>
+
+      <div class="row">
+        <button class="btn btn-primary" onclick="calcularClasses()">Calcular</button>
+      </div>
+
+      <div id="resultadoClasses" class="results"></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
