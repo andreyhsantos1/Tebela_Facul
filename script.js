@@ -25,19 +25,6 @@
     // ====== Rounding & formatting
     function arred2(x){ return Math.round(x*100)/100; } // regra 0-4 / 5-9
     function numBR(x){ return arred2(x).toFixed(2).replace('.',','); }
-    function formatarValor(x, unidade){
-      const v = numBR(x);
-      return (unidade==='R$') ? `${unidade} ${v}` : `${v} ${unidade}`;
-    }
-    // Unidade da variância segundo especificação do usuário
-    function unidadeVariancia(u){
-      if(u==='R$') return 'R$²';
-      if(u==='°C') return '°C²';
-      if(u==='Km/h') return '(Km/h)²';
-      if(u==='m²') return '(m²)²';
-      // fallback genérico:
-      return `(${u})²`;
-    }
 
     // ====== Checkboxes (seleção de resultados)
     function renderChecksDiscreto(){
@@ -93,11 +80,48 @@
       for(let i=1;i<=n;i++){
         html += `<tr>
           <td><input type="number" step="any" id="dxi${i}" /></td>
-          <td><input type="number" step="1" id="dfi${i}" /></td>
+          <td><input type="number" step="1" min="0" id="dfi${i}" /></td>
         </tr>`;
       }
       html += `</tbody></table>`;
       document.getElementById('tabelaDiscretoContainer').innerHTML = html;
+
+      if (n > 1) {
+        const xi1Input = document.getElementById('dxi1');
+        const fi1Input = document.getElementById('dfi1');
+
+        const autoFillHandler = () => {
+          const xi1 = parseFloat(xi1Input.value);
+          const fi1 = parseInt(fi1Input.value, 10);
+
+          if (Number.isNaN(xi1) || Number.isNaN(fi1)) {
+            for (let i = 2; i <= n; i++) {
+              document.getElementById(`dxi${i}`).value = '';
+              document.getElementById(`dfi${i}`).value = '';
+            }
+            return;
+          }
+
+          const diff = xi1 - fi1;
+          let lastXi = xi1;
+          let lastFi = fi1;
+
+          for (let i = 2; i <= n; i++) {
+            const nextXi = lastXi + diff;
+            const nextFi = lastFi + diff;
+            const finalFi = Math.max(0, Math.round(nextFi));
+
+            document.getElementById(`dxi${i}`).value = arred2(nextXi);
+            document.getElementById(`dfi${i}`).value = finalFi;
+
+            lastXi = nextXi;
+            lastFi = finalFi;
+          }
+        };
+
+        xi1Input.addEventListener('input', autoFillHandler);
+        fi1Input.addEventListener('input', autoFillHandler);
+      }
     }
     function limparTabelaDiscreto(){
       document.getElementById('tabelaDiscretoContainer').innerHTML='';
@@ -123,7 +147,6 @@
     function calcularDiscretoFromTabela(){
       const {vals,freqs} = coletarDiscretoFromTabela();
       if(vals.length===0){ alert('Preencha ao menos uma linha com xi e fi.'); return; }
-      const unidade = document.getElementById('unidadeDiscreto').value;
       const checks = {
         media: document.getElementById('dMedia').checked,
         mediana: document.getElementById('dMediana').checked,
@@ -133,7 +156,7 @@
         cv: document.getElementById('dCV').checked,
       };
       const res = calcularDiscreto(vals, freqs);
-      renderResultadosDiscreto(res, unidade, checks, 'resultadoDiscretoTabela');
+      renderResultadosDiscreto(res, checks, 'resultadoDiscretoTabela');
     }
 
     // ====== DISCRETO: TEXTO
@@ -149,7 +172,6 @@
     }
     function calcularDiscretoFromTexto(){
       const txt = document.getElementById('textoDiscreto').value || '';
-      const unidade = document.getElementById('unidadeDiscreto').value;
       const checks = {
         media: document.getElementById('dMedia').checked,
         mediana: document.getElementById('dMediana').checked,
@@ -171,7 +193,7 @@
       prev += `</tbody></table></div>`;
       document.getElementById('freqPreview').innerHTML = `<div class="muted">Frequências detectadas automaticamente:</div>${prev}`;
       const res = calcularDiscreto(vals, freqs);
-      renderResultadosDiscreto(res, unidade, checks, 'resultadoDiscretoTexto');
+      renderResultadosDiscreto(res, checks, 'resultadoDiscretoTexto');
     }
 
     // ====== CÁLCULOS DISCRETOS
@@ -200,16 +222,16 @@
       return { media, mediana, modas, variancia, dp, cv };
     }
 
-    function renderResultadosDiscreto(res, unidade, checks, targetId){
+    function renderResultadosDiscreto(res, checks, targetId){
       let html = `<div class="card"><table><thead><tr><th>Medida</th><th>Valor</th></tr></thead><tbody>`;
-      if(checks.media) html += `<tr><td>Média</td><td>${formatarValor(res.media, unidade)}</td></tr>`;
-      if(checks.mediana) html += `<tr><td>Mediana</td><td>${formatarValor(res.mediana, unidade)}</td></tr>`;
+      if(checks.media) html += `<tr><td>Média</td><td>${res.media}</td></tr>`;
+      if(checks.mediana) html += `<tr><td>Mediana</td><td>${res.mediana}</td></tr>`;
       if(checks.moda){
-        const list = res.modas.map(m=>formatarValor(m, unidade)).join('; ');
+        const list = res.modas.map(m=>m).join('; ');
         html += `<tr><td>Moda</td><td>${list}</td></tr>`;
       }
-      if(checks.variancia) html += `<tr><td>Variância</td><td>${formatarValor(res.variancia, unidadeVariancia(unidade))}</td></tr>`;
-      if(checks.dp) html += `<tr><td>Desvio Padrão</td><td>${formatarValor(res.dp, unidade)}</td></tr>`;
+      if(checks.variancia) html += `<tr><td>Variância</td><td>${res.variancia}</td></tr>`;
+      if(checks.dp) html += `<tr><td>Desvio Padrão</td><td>${res.dp}</td></tr>`;
       if(checks.cv) html += `<tr><td>Coeficiente de Variação</td><td>${numBR(res.cv)} %</td></tr>`;
       html += `</tbody></table></div>`;
       document.getElementById(targetId).innerHTML = html;
@@ -256,7 +278,6 @@
     function calcularClasses(){
       const dados = coletarClasses();
       if(dados.length===0){ alert('Preencha ao menos uma classe com LI, LS e fi.'); return; }
-      const unidade = document.getElementById('unidadeClasses').value;
       const checks = {
         media: document.getElementById('cMedia').checked,
         mediana: document.getElementById('cMediana').checked,
@@ -315,19 +336,18 @@
       const cv = (dp/media)*100;
 
       renderResultadosClasses(
-        { media, mediana, modaBruta, modaCzuber, variancia, dp, cv },
-        unidade, checks
+        { media, mediana, modaBruta, modaCzuber, variancia, dp, cv }, checks
       );
     }
 
-    function renderResultadosClasses(res, unidade, checks){
+    function renderResultadosClasses(res, checks){
       let html = `<div class="card"><table><thead><tr><th>Medida</th><th>Valor</th></tr></thead><tbody>`;
-      if(checks.media) html += `<tr><td>Média</td><td>${formatarValor(res.media, unidade)}</td></tr>`;
-      if(checks.mediana) html += `<tr><td>Mediana</td><td>${formatarValor(res.mediana, unidade)}</td></tr>`;
-      if(checks.modaBruta) html += `<tr><td>Moda Bruta</td><td>${formatarValor(res.modaBruta, unidade)}</td></tr>`;
-      if(checks.modaCzuber) html += `<tr><td>Moda de Czuber</td><td>${formatarValor(res.modaCzuber, unidade)}</td></tr>`;
-      if(checks.variancia) html += `<tr><td>Variância</td><td>${formatarValor(res.variancia, unidadeVariancia(unidade))}</td></tr>`;
-      if(checks.dp) html += `<tr><td>Desvio Padrão</td><td>${formatarValor(res.dp, unidade)}</td></tr>`;
+      if(checks.media) html += `<tr><td>Média</td><td>${res.media}</td></tr>`;
+      if(checks.mediana) html += `<tr><td>Mediana</td><td>${res.mediana}</td></tr>`;
+      if(checks.modaBruta) html += `<tr><td>Moda Bruta</td><td>${res.modaBruta}</td></tr>`;
+      if(checks.modaCzuber) html += `<tr><td>Moda de Czuber</td><td>${res.modaCzuber}</td></tr>`;
+      if(checks.variancia) html += `<tr><td>Variância</td><td>${res.variancia}</td></tr>`;
+      if(checks.dp) html += `<tr><td>Desvio Padrão</td><td>${res.dp}</td></tr>`;
       if(checks.cv) html += `<tr><td>Coeficiente de Variação</td><td>${numBR(res.cv)} %</td></tr>`;
       html += `</tbody></table></div>`;
       document.getElementById('resultadoClasses').innerHTML = html;
